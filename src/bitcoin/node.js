@@ -7,11 +7,17 @@ import { Network } from '../lib/network';
 import { BlockChain, type BlockChainType } from './blockchain';
 import { BLOCK_SIZE_LIMIT, NETWORK_MESSAGE } from './constants';
 
+type MemPool = Array<{|
+    fee : number,
+    signedTransaction : string    
+|}>;
+
 type BitcoinNodeType = {|
     getPublicKey : () => Promise<string>,
     run : () => Promise<void>,
     send : (receiver : string, amount : number, fee : number) => Promise<void>,
-    getBlockChain : () => BlockChainType
+    getBlockChain : () => BlockChainType,
+    getMemPool : () => MemPool
 |};
 
 export function BitcoinNode() : BitcoinNodeType {
@@ -19,12 +25,7 @@ export function BitcoinNode() : BitcoinNodeType {
     const network = Network();
     const blockchain = BlockChain();
 
-    const peers = [];
-    let mempool = [];
-
-    network.listen(NETWORK_MESSAGE.IDENTIFY, peer => {
-        peers.push(peer);
-    });
+    let mempool : MemPool = [];
 
     network.listen(NETWORK_MESSAGE.ADD_TRANSACTION, async (signedTransaction) => {
         const [ { fee } ] = await verifySignatureAndUnpack(signedTransaction);
@@ -58,10 +59,8 @@ export function BitcoinNode() : BitcoinNodeType {
 
     const run = async () : Promise<void> => {
         const { publicKey } = await keypairPromise;
-        await network.broadcast(NETWORK_MESSAGE.IDENTIFY, { publicKey });
 
         await loop(async () => {
-            
             const topTransactions =
                 sortBy(mempool, pooledTransaction => pooledTransaction.fee)
                 .slice(0, BLOCK_SIZE_LIMIT)
@@ -97,10 +96,15 @@ export function BitcoinNode() : BitcoinNodeType {
         return blockchain;
     };
 
+    const getMemPool = () => {
+        return mempool;
+    };
+
     return {
         getPublicKey,
         run,
         send,
-        getBlockChain
+        getBlockChain,
+        getMemPool
     };
 }

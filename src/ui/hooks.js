@@ -2,33 +2,44 @@
 import { useEffect, useState } from 'react';
 
 import { BitcoinNode } from '../bitcoin/node';
-import { hashAndPack } from '../lib/crypto';
-import { randomEntry } from '../lib/util';
+import { hashAndPack, verifySignatureAndUnpack } from '../lib/crypto';
+import { asyncMap, randomEntry } from '../lib/util';
 
 const MAX_ID_LENGTH = 10;
 
 const getPublicID = (publicKey) => {
-  return publicKey.length < MAX_ID_LENGTH ? publicKey : JSON.parse(atob(publicKey)).n.slice(0, MAX_ID_LENGTH)
+  return publicKey.length < MAX_ID_LENGTH ? publicKey : JSON.parse(atob(publicKey)).n.replace(/[^a-zA-Z0-9]/g, '').slice(0, MAX_ID_LENGTH)
 }
 
 export function useNodes() {
+  const [ nodes, setNodes ] = useState([])
   const [ blocks, setBlocks ] = useState([]);
   const [ balances, setBalances ] = useState({});
+  const [ mempool, setMempool ] = useState([]);
 
-  useEffect(() => {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(async () => {
+    const rawNodes = [];
     const nodes = [];
 
     for (const _ of new Array(5).fill()) {
       const node = BitcoinNode();
       node.run();
-      nodes.push(node);
+      rawNodes.push(node);
+      nodes.push({
+        id: getPublicID(await node.getPublicKey())
+      });
     }
+
+    setNodes(nodes);
 
     let sent = {};
     let blockcount = 1;
 
     setInterval(async () => {
-      const blockChain = nodes[0].getBlockChain();
+      const firstNode = rawNodes[0];
+    
+      const blockChain = firstNode.getBlockChain();
       const longestChain = blockChain.getBlocks().getRoot().getLongestChain();
       const rawBalances = await blockChain.getBalances();
 
@@ -63,6 +74,15 @@ export function useNodes() {
       }
       setBlocks(blocks);
 
+      const mempool = await asyncMap(
+        firstNode.getMemPool(),
+          async ({ signedTransaction }) => {
+            const [ { receiver, amount, fee }, sender ] = await verifySignatureAndUnpack(signedTransaction);
+            return { sender: getPublicID(sender), receiver: getPublicID(receiver), amount, fee }
+        }
+      )
+      setMempool(mempool);
+
       const balances = {};
       for (const [ account, balance ] of Object.entries(rawBalances)) {
           balances[getPublicID(account)] = balance;
@@ -75,7 +95,7 @@ export function useNodes() {
         sent = {};
       }
 
-      const sender = randomEntry(nodes);
+      const sender = randomEntry(rawNodes);
       const senderPublicKey = await sender.getPublicKey();
 
       if (sent[senderPublicKey]) {
@@ -85,7 +105,7 @@ export function useNodes() {
 
       let receiver;
       while (!receiver || receiver === sender) {
-        receiver = randomEntry(nodes);
+        receiver = randomEntry(rawNodes);
       }
       const receiverPublicKey = await receiver.getPublicKey();
 
@@ -102,5 +122,5 @@ export function useNodes() {
     }, 100);
   }, []);
 
-  return { blocks, balances }
+  return { nodes, blocks, balances, mempool }
 }

@@ -3,10 +3,26 @@ import './App.css';
 import { useNodes } from './ui/hooks';
 
 function App() {
-  const { blocks, balances } = useNodes();
-  
+  const { nodes, blocks, balances, mempool } = useNodes();
+
   return (
     <div className="App">
+      <div>
+        <pre>
+          {
+            JSON.stringify(nodes, null, 4)
+          }
+        </pre>
+      </div>
+      <hr />
+      <div>
+        <pre>
+          {
+            JSON.stringify(mempool, null, 4)
+          }
+        </pre>
+      </div>
+      <hr />
       <div>
         <pre>
           {

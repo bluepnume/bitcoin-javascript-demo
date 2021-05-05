@@ -28,7 +28,6 @@ export const GENESIS_BLOCK : BlockType = {
 
 // Some network messages we need to send between nodes
 export const NETWORK_MESSAGE = {
-    IDENTIFY:        'IDENTIFY',
     ADD_TRANSACTION: 'ADD_TRANSACTION',
     ADD_BLOCK:       'ADD_BLOCK'
 };
