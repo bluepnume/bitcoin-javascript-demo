@@ -1,23 +1,31 @@
-import logo from './logo.svg';
+
 import './App.css';
+import { useNodes } from './ui/hooks';
 
 function App() {
+  const { blocks, balances } = useNodes();
+  
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <div>
+        <pre>
+          {
+            JSON.stringify(balances, null, 4)
+          }
+        </pre>
+      </div>
+      <hr />
+      {
+        blocks.map(block => {
+          return <div>
+            <pre>
+              {
+                JSON.stringify(block, null, 4)
+              }
+            </pre>
+          </div>
+        })
+      }
     </div>
   );
 }
