@@ -119,7 +119,7 @@ export function useNodes() {
       const fee = Math.max(1, Math.floor(Math.random() * amount * 0.03));
 
       await sender.send(receiverPublicKey, amount, fee);
-    }, 100);
+    }, 500);
   }, []);
 
   return { nodes, blocks, balances, mempool }
