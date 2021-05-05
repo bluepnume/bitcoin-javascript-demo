@@ -1,47 +1,24 @@
 
-import './App.css';
-import { useNodes } from './ui/hooks';
+import React from 'react';
 
-function App() {
+import './App.scss';
+import { useNodes } from './ui/hooks';
+import StatsContainer from './StatsContainer';
+import NodeContainer from './NodeContainer';
+import BlockContainer from './BlockContainer';
+import MempoolContainer from './MempoolContainer';
+
+const App = () => {
   const { nodes, blocks, balances, mempool } = useNodes();
 
   return (
-    <div className="App">
-      <div>
-        <pre>
-          {
-            JSON.stringify(nodes, null, 4)
-          }
-        </pre>
+    <div className="js-bitcoin-container">
+      <StatsContainer blocks={blocks} />
+      <div className="main-content">
+        <BlockContainer blocks={blocks} />
+        <MempoolContainer mempool={mempool} />
+        <NodeContainer nodes={nodes} balances={balances} blocks={blocks} />
       </div>
-      <hr />
-      <div>
-        <pre>
-          {
-            JSON.stringify(mempool, null, 4)
-          }
-        </pre>
-      </div>
-      <hr />
-      <div>
-        <pre>
-          {
-            JSON.stringify(balances, null, 4)
-          }
-        </pre>
-      </div>
-      <hr />
-      {
-        blocks.map(block => {
-          return <div>
-            <pre>
-              {
-                JSON.stringify(block, null, 4)
-              }
-            </pre>
-          </div>
-        })
-      }
     </div>
   );
 }
