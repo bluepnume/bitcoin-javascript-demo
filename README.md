@@ -1,3 +1,10 @@
+# Bitcoin JavaScript Demo
+
+Demo app showing some of the implementation details of Bitcoin
+
+![Screenshot](./screenshot.png)
+
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).

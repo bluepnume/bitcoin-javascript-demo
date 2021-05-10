@@ -96,6 +96,7 @@ export function BlockChain() : BlockChainType {
                 balances.add(miner, fee);
                 balances.add(receiver, amount);
                 balances.subtract(sender, amount);
+                balances.subtract(sender, fee);
             }
         }
 

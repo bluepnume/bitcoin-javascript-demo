@@ -32,7 +32,7 @@ const MempoolContainer = ({ mempool }) => (
                 </div>
                 <div className="txn-fees">
                   <p>{pt.amount}</p>
-                  <p className="fee">-{pt.fee} fee</p>
+                  <p className="fee">+{pt.fee} fee</p>
                 </div>
               </div>
             </div>

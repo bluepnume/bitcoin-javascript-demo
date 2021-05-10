@@ -70,7 +70,7 @@ const BlockContainer = ({ blocks }) => (
                         </div>
                         <div className="txn-fees">
                           <p>{txn.amount}</p>
-                          <p className="fee">-{txn.fee} fee</p>
+                          <p className="fee">+{txn.fee} fee</p>
                         </div>
                       </div>
                     </div>
