@@ -39,21 +39,20 @@ export function BlockChain() : BlockChainType {
     }
 
     const addBlock = async (block : BlockType) => {
-        genesisBlockNode.findValue(val => val.id === block.parentid)?.addNode(TreeNode(block));
+        genesisBlockNode.findValue(val => val.id === block.parentid)
+            ?.addNode(TreeNode(block));
     };
 
-    const calculateNewDifficulty = (headBlock : BlockType) : number => {
-        const elapsed = Date.now() - headBlock.time;
-
-        if (elapsed > (BLOCK_TIME * 3)) {
-            return headBlock.difficulty - 1;
+    const calculateNewDifficulty = (headBlock : BlockType, previousHeadBlock : ?BlockType) : number => {
+        if (!previousHeadBlock) {
+            return headBlock.difficulty;
         }
 
-        if (elapsed < (BLOCK_TIME / 3)) {
-            return headBlock.difficulty + 1;
-        }
+        console.warn((headBlock.time - previousHeadBlock.time), BLOCK_TIME)
 
-        return headBlock.difficulty;
+        return (headBlock.time - previousHeadBlock.time) > BLOCK_TIME
+            ? headBlock.difficulty - 1
+            : headBlock.difficulty + 1;
     };
 
     const calculateNewReward = (headBlock : BlockType) => {
@@ -61,11 +60,15 @@ export function BlockChain() : BlockChainType {
     };
 
     const doesHashPassDifficulty = (hash : string, difficulty : number) : boolean => {
-        return count(hash, 'a') >= difficulty;
+        return (parseInt(hash, 36) % difficulty) === 0;
     }
 
     const mineBlock = async (publicKey, transactions) : Promise<?string> => {
-        const headBlock = genesisBlockNode.getLongestBranch().getValue();
+        const headNode = genesisBlockNode.getLongestBranch();
+        const previousHeadNode = headNode.getParent();
+        
+        const headBlock = headNode.getValue();
+        const previousHeadBlock = previousHeadNode?.getValue();
 
         const newBlock = {
             miner:      publicKey,
@@ -74,7 +77,7 @@ export function BlockChain() : BlockChainType {
             id:         uniqueID(),
             time:       Date.now(),
             transactions,
-            difficulty: calculateNewDifficulty(headBlock),
+            difficulty: calculateNewDifficulty(headBlock, previousHeadBlock),
             reward:     calculateNewReward(headBlock)
         };
 

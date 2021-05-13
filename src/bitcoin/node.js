@@ -74,7 +74,7 @@ export function BitcoinNode() : BitcoinNodeType {
                     hashedBlock
                 );
             }
-        }, 100);
+        }, 500);
     };
 
     const send = async (receiver : string, amount : number, fee : number) : Promise<void> => {

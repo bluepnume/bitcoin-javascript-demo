@@ -3,13 +3,13 @@
 import type { BlockType } from './blockchain';
 
 // Approximately how long should it take between new blocks
-export const BLOCK_TIME = 3 * 1000;
+export const BLOCK_TIME = 1000;
 
 // What is the starting block reward for each mined block
 export const INITIAL_REWARD = 1024;
 
 // After how many blocks should the block reward be cut in half
-export const REWARD_HALVING_SCHEDULE = 10;
+export const REWARD_HALVING_SCHEDULE = 20;
 
 // What is the limit for number of transactions per block
 export const BLOCK_SIZE_LIMIT = 10;
@@ -19,10 +19,10 @@ export const GENESIS_BLOCK : BlockType = {
     parentid:     null,
     miner:        'SATOSHI',
     id:           'GENESIS',
-    index:        0,
+    index:        1,
     time:         Date.now(),
     transactions: [],
-    difficulty:   10,
+    difficulty:   1,
     reward:       INITIAL_REWARD
 };
 

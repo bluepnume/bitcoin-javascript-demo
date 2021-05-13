@@ -30,7 +30,7 @@ class StatsContainer extends React.Component {
       currReward: blocks[0].reward,
       currDiff: blocks[0].difficulty,
       totalBlocks: blocks.length,
-      avgTime: Math.round((totalBlockDiffs.reduce((x, y) => x + y)) / blocks.length),
+      avgTime: Math.round((totalBlockDiffs.slice(0, 10).reduce((x, y) => x + y, 0)) / totalBlockDiffs.slice(0, 10).length),
       rewardsArr: ([...blocks].reverse().map((block, index) => ({y: block.reward, x: index + 1 }))),
       diffArr: ([...blocks].reverse().map((block, index) => ({y: block.difficulty, x: index + 1 }))),
     });
