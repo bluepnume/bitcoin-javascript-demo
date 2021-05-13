@@ -191,6 +191,15 @@ html {
                   p {
                     margin: 0;
                   }
+
+                  .txn-sender, .txn-receiver {
+                    display: flex;
+                    align-items: center;
+
+                    svg {
+                      margin-right: 5px;
+                    }
+                  }
                 }
     
                 .txn-labels {
@@ -288,6 +297,15 @@ html {
 
               p {
                 margin: 0;
+              }
+
+              .txn-sender, .txn-receiver {
+                display: flex;
+                align-items: center;
+
+                svg {
+                  margin-right: 5px;
+                }
               }
             }
 

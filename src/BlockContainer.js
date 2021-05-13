@@ -50,36 +50,47 @@ const BlockContainer = ({ blocks }) => (
             <div className="txns-container">
               <p>Block Transactions:</p>
               {block.transactions.length ?
-                block.transactions.map((txn, key) => (
-                  <div key={key}>
-                    <div className="block-txn">
-                      <div className="parties-container">
-                        <div className="txn-labels">
-                          <p>Sender</p>
-                          <p>Receiver</p>
+                block.transactions.map((txn, key) => {
+                  const senderStyle = mapIdToProps(txn.sender) || {};
+                  const receiverStyle = mapIdToProps(txn.receiver) || {};
+
+                  return (
+                    <div key={key}>
+                      <div className="block-txn">
+                        <div className="parties-container">
+                          <div className="txn-labels">
+                            <p>Sender</p>
+                            <p>Receiver</p>
+                          </div>
+                          <div className="txn-parties">
+                            <div className="txn-sender">
+                              {senderStyle.icon && <FontAwesomeIcon icon={senderStyle.icon} color={senderStyle.color} />}
+                              <p style={{ color: senderStyle.color }}>{txn.sender}</p>
+                            </div>
+                            <FontAwesomeIcon icon={faAngleRight} />
+                            <div className="txn-receiver">
+                              {receiverStyle.icon && <FontAwesomeIcon icon={receiverStyle.icon} color={receiverStyle.color} />}
+                              <p style={{ color: receiverStyle.color }}>{txn.receiver}</p>
+                            </div>
+                          </div>
                         </div>
-                        <div className="txn-parties">
-                          <p>{txn.sender}</p>
-                          <FontAwesomeIcon icon={faAngleRight} />
-                          <p>{txn.receiver}</p>
+                        <div className="txn-details">
+                          <div className="txn-labels">
+                            <p>Amount</p>
+                          </div>
+                          <div className="txn-fees">
+                            <p>{txn.amount}</p>
+                            <p className="fee">+{txn.fee} fee</p>
+                          </div>
                         </div>
                       </div>
-                      <div className="txn-details">
-                        <div className="txn-labels">
-                          <p>Amount</p>
-                        </div>
-                        <div className="txn-fees">
-                          <p>{txn.amount}</p>
-                          <p className="fee">+{txn.fee} fee</p>
-                        </div>
-                      </div>
+                      {(key !== block.transactions.length - 1) ?
+                        <hr className="separator" />
+                        : null
+                      }
                     </div>
-                    {(key !== block.transactions.length - 1) ?
-                      <hr className="separator" />
-                      : null
-                    }
-                  </div>
-                ))
+                  );
+                })
                 : <p className="no-txn-text">No transactions for this block</p>
               }
             </div>
