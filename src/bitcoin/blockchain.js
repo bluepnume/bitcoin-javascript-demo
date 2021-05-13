@@ -2,7 +2,7 @@
 
 import { hashAndPack } from '../lib/crypto';
 import { TreeNode, type TreeNodeType } from '../lib/tree';
-import { count, Counter, uniqueID } from '../lib/util';
+import { Counter, uniqueID } from '../lib/util';
 
 import { BLOCK_TIME, GENESIS_BLOCK, INITIAL_REWARD, REWARD_HALVING_SCHEDULE } from './constants';
 
@@ -47,8 +47,6 @@ export function BlockChain() : BlockChainType {
         if (!previousHeadBlock) {
             return headBlock.difficulty;
         }
-
-        console.warn((headBlock.time - previousHeadBlock.time), BLOCK_TIME)
 
         return (headBlock.time - previousHeadBlock.time) > BLOCK_TIME
             ? headBlock.difficulty - 1
