@@ -4,25 +4,7 @@ import { hashAndPack } from '../lib/crypto';
 import { TreeNode, type TreeNodeType } from '../lib/tree';
 import { Counter, uniqueID } from '../lib/util';
 
-import { BLOCK_TIME, GENESIS_BLOCK, INITIAL_REWARD, REWARD_HALVING_SCHEDULE } from './constants';
-
-export type TransactionType = {|
-    sender : string,
-    receiver : string,
-    amount : number,
-    fee : number
-|};
-
-export type BlockType = {|
-    miner : string,
-    parentid : ?string,
-    id : string,
-    index : number,
-    time : number,
-    transactions : Array<TransactionType>,
-    difficulty : number,
-    reward : number
-|};
+import { BLOCK_TIME, GENESIS_BLOCK, INITIAL_REWARD, REWARD_HALVING_SCHEDULE, type BlockType } from './constants';
 
 export type BlockChainType = {|
     getBlocks : () => TreeNodeType<BlockType>,

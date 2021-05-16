@@ -1,6 +1,22 @@
 /* @flow */
 
-import type { BlockType } from './blockchain';
+export type TransactionType = {|
+    sender : string,
+    receiver : string,
+    amount : number,
+    fee : number
+|};
+
+export type BlockType = {|
+    miner : string,
+    parentid : ?string,
+    id : string,
+    index : number,
+    time : number,
+    transactions : Array<TransactionType>,
+    difficulty : number,
+    reward : number
+|};
 
 // Approximately how long should it take between new blocks
 export const BLOCK_TIME = 1000;
