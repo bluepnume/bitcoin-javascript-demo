@@ -2,18 +2,20 @@
 
 export type TreeNodeType<T> = {|
     getValue : () => T,
-    addNode : (TreeNodeType<T>) => void,
-    getParent : () => ?TreeNodeType<T>,
+    addChildNode : (TreeNodeType<T>) => void,
+    addChildNodeValue : (T) => void,
+    getParent : () => TreeNodeType<T>,
     setParent : (TreeNodeType<T>) => void,
     getRoot : () => TreeNodeType<T>,
     getLongestBranchAndLength : () => {| length : number, node : TreeNodeType<T> |},
-    getLongestBranch : () => TreeNodeType<T>,
+    getLongestBranchNode : () => TreeNodeType<T>,
+    getLongestBranchValue : () => T,
     find : ((TreeNodeType<T>) => boolean) => ?TreeNodeType<T>,
     findValue : ((T) => boolean) => ?TreeNodeType<T>,
+    findValueByID : (string) => ?TreeNodeType<T>,
     getChain : () => Array<TreeNodeType<T>>,
     getLongestChain : () => Array<TreeNodeType<T>>,
-    getLongestChainAsValues : () => Array<T>,
-    getIndex : () => number
+    getLongestChainAsValues : () => Array<T>
 |};
 
 export function TreeNode<T>(value : T) : TreeNodeType<T> {
@@ -25,9 +27,13 @@ export function TreeNode<T>(value : T) : TreeNodeType<T> {
     const node : TreeNodeType<T> = defaultNode();
     const branches = [];
 
-    const addNode = (childNode) => {
+    const addChildNode = (childNode) => {
         branches.push(childNode);
         childNode.setParent(node)
+    };
+
+    const addChildNodeValue = (val) => {
+        addChildNode(TreeNode(val))
     };
 
     const getValue = () => {
@@ -35,7 +41,7 @@ export function TreeNode<T>(value : T) : TreeNodeType<T> {
     }
 
     const getParent = () => {
-        return parent;
+        return parent || node;
     };
 
     const setParent = (parentNode) => {
@@ -46,7 +52,7 @@ export function TreeNode<T>(value : T) : TreeNodeType<T> {
         let root = node;
         while (true) {
             const newRoot = root.getParent();
-            if (newRoot) {
+            if (newRoot && newRoot !== root) {
                 root = newRoot;
             } else {
                 break
@@ -72,8 +78,12 @@ export function TreeNode<T>(value : T) : TreeNodeType<T> {
         return longestBranch;
     };
 
-    const getLongestBranch = () => {
+    const getLongestBranchNode = () => {
         return getLongestBranchAndLength().node;
+    };
+
+    const getLongestBranchValue = () => {
+        return getLongestBranchNode().getValue();
     };
 
     const find = (predicate) => {
@@ -94,53 +104,50 @@ export function TreeNode<T>(value : T) : TreeNodeType<T> {
         return find(node => predicate(node.getValue()));
     };
 
+    const findValueByID = (id) => {
+        // $FlowFixMe
+        return findValue(value => value.id === id);
+    };
+
     const getChain = () => {
         let current = node;
         const nodes = [];
 
         while (current) {
+            const parent = current.getParent();
+            if (parent === current) {
+                break;
+            }
             nodes.unshift(current);
-            current = current.getParent();
+            current = parent;
         }
 
         return nodes;
     };
 
     const getLongestChain = () => {
-        return getLongestBranch().getChain();
+        return getLongestBranchNode().getChain();
     }
 
     const getLongestChainAsValues = () => {
-        return getLongestBranch().getChain().map(node => node.getValue());
+        return getLongestBranchNode().getChain().map(node => node.getValue());
     }
 
-    const getIndex = () => {
-        let index = 0;
-        let current = node;
-        while (true) {
-            const parent = current.getParent();
-            if (!parent) {
-                break;
-            }
-            index += 1;
-            current = parent;
-        }
-        return index;
-    };
-
     node.getValue = getValue;
-    node.addNode = addNode;
+    node.addChildNode = addChildNode;
+    node.addChildNodeValue = addChildNodeValue;
     node.getParent = getParent;
     node.setParent = setParent;
     node.getRoot = getRoot;
     node.getLongestBranchAndLength = getLongestBranchAndLength;
-    node.getLongestBranch = getLongestBranch;
+    node.getLongestBranchNode = getLongestBranchNode;
+    node.getLongestBranchValue = getLongestBranchValue;
     node.find = find;
     node.findValue = findValue;
+    node.findValueByID = findValueByID;
     node.getChain = getChain;
     node.getLongestChain = getLongestChain;
     node.getLongestChainAsValues = getLongestChainAsValues;
-    node.getIndex = getIndex;
 
     return node;
 }

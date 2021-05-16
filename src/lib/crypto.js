@@ -32,16 +32,16 @@ declare var crypto : {|
     |}
 |};
 
-export async function getKeyPair() : Promise<{| publicKey : string, privateKey : string |}> {
-    const keyPair = await crypto.subtle.generateKey(
+export function KeyPair() : {| publicKey : Promise<string>, privateKey : Promise<string> |} {
+    const keyPairPromise = crypto.subtle.generateKey(
         KEY_DATA,
         true,
         KEY_OPS
     );
 
-    const privateKey = base64encode(safeJSONStringify(await crypto.subtle.exportKey('jwk', keyPair.privateKey)));
-    const publicKey = base64encode(safeJSONStringify(await crypto.subtle.exportKey('jwk', keyPair.publicKey)));
-
+    const privateKey = keyPairPromise.then(({ privateKey }) => crypto.subtle.exportKey('jwk', privateKey)).then(safeJSONStringify).then(base64encode);
+    const publicKey = keyPairPromise.then(({ publicKey }) => crypto.subtle.exportKey('jwk', publicKey)).then(safeJSONStringify).then(base64encode);
+    
     return { privateKey, publicKey };
 }
 
@@ -64,7 +64,7 @@ export async function verifySignature<T>(data : T | string, signature : string, 
     );
 }
 
-export async function signAndPack<T>(data : T, publicKey : string, privateKey : string) : Promise<[ string, string ]> {
+export async function signAndPack<T>(data : T, publicKey : string, privateKey : string) : Promise<string> {
     const signature = await sign(data, privateKey);
     const signedData = base64encode(safeJSONStringify({
         data,
@@ -72,15 +72,30 @@ export async function signAndPack<T>(data : T, publicKey : string, privateKey : 
         signature
     }));
 
-    return [ signedData, signature ]
+    return signedData;
 }
 
-export async function verifySignatureAndUnpack<T>(packedData : string) : Promise<[ T, string, string ]> {
+export async function verifySignatureAndUnpack<T>(packedData : string) : Promise<T> {
     const { data, publicKey, signature } = JSON.parse(base64decode(packedData));
     if (!await verifySignature(data, signature, publicKey)) {
         throw new Error(`Data signature does not match!`);
     }
-    return [ data, publicKey, signature ];
+    return data;
+}
+
+export async function verifyPackedSignature(packedData : string) : Promise<boolean> {
+    const { data, publicKey, signature } = JSON.parse(base64decode(packedData));
+    return await verifySignature(data, signature, publicKey);
+}
+
+export function unpackSignature(packedData : string) : string {
+    const { signature } = JSON.parse(base64decode(packedData));
+    return signature;
+}
+
+export function unpackPublicKey(packedData : string) : string {
+    const { publicKey } = JSON.parse(base64decode(packedData));
+    return publicKey;
 }
 
 export async function hash<T>(data : T) : Promise<string> {
@@ -91,20 +106,25 @@ export async function verifyHash<T>(data : T | string, hashedData : string) : Pr
     return await verifySignature(typeof data === 'string' ? data : safeJSONStringify(data), hashedData, HASH_PUBLIC_KEY);
 }
 
-export async function hashAndPack<T>(data : T) : Promise<[ string, string ]> {
+export async function hashAndPack<T>(data : T) : Promise<string> {
     const dataHash = await hash(data);
     const packedData = base64encode(safeJSONStringify({
         data,
         hash: dataHash
     }));
 
-    return [ packedData, dataHash ];
+    return packedData;
 }
 
-export async function verifyHashAndUnpack<T>(packedData : string) : Promise<[ T, string ]> {
+export async function verifyHashAndUnpack<T>(packedData : string) : Promise<T> {
     const { data, hash } = JSON.parse(base64decode(packedData));
     if (!await verifyHash(data, hash)) {
         throw new Error(`Data hash does not match!`);
     }
-    return [ data, hash ];
+    return data;
+}
+
+export function unpackHash(packedData : string) : string {
+    const { hash } = JSON.parse(base64decode(packedData));
+    return hash;
 }

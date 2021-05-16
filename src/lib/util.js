@@ -72,7 +72,7 @@ export async function delay(time : number) : Promise<void> {
     return await new Promise(resolve => setTimeout(resolve, time));
 }
 
-export async function loop(handler : () => (Promise<void> | void), time? : number = 100) {
+export async function loop(handler : () => (Promise<void> | void), time? : number = 500) {
     while (true) {
         await delay(time);
         handler();
@@ -109,6 +109,20 @@ export async function asyncMap<T, R>(arr : Array<T>, mapper : (T) => Promise<R>)
     return await Promise.all(arr.map(mapper));
 }
 
+export async function asyncFilter<T>(arr : Array<T>, filterer : (T) => Promise<boolean>) : Promise<Array<T>> {
+    return await Promise.all(arr.map((val, index) => {
+        return Promise.resolve(filterer(val)).then(include => {
+            return [ val, include ];
+        })
+    })).then(results => {
+        return results.filter(([ val, include ]) => {
+            return include;
+        }).map(([ val, include ]) => {
+            return val;
+        })
+    });
+}
+
 interface Indexable {
     [key: string]: number
   }
@@ -130,4 +144,16 @@ export class Counter implements Indexable {
 
 export function randomEntry<T>(arr : Array<T>) : T {
     return arr[Math.floor(Math.random() * arr.length)]
+}
+
+export function divisibleBy(num : number | string, divisor : number, base : number = 36) : boolean {
+    if (typeof num === 'string') {
+        num = parseInt(num, base);
+    }
+    
+    return (num % divisor) === 0;
+}
+
+export function now() : number {
+    return Date.now();
 }

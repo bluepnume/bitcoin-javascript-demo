@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 
 import { BitcoinNode } from '../bitcoin/node';
-import { hashAndPack, verifySignatureAndUnpack } from '../lib/crypto';
+import { hashAndPack, unpackHash, verifySignatureAndUnpack } from '../lib/crypto';
 import { asyncMap, randomEntry } from '../lib/util';
 
 const MAX_ID_LENGTH = 10;
@@ -24,7 +24,7 @@ export function useNodes() {
 
     for (const _ of new Array(5).fill()) {
       const node = BitcoinNode();
-      node.run();
+      node.mine();
       rawNodes.push(node);
       nodes.push({
         id: getPublicID(await node.getPublicKey())
@@ -59,7 +59,7 @@ export function useNodes() {
           })
         }
 
-        const { hash } = await hashAndPack(node.getValue())
+        const hash = unpackHash(await hashAndPack(node.getValue()))
 
         blocks.unshift({
           miner: getPublicID(miner),
@@ -76,8 +76,8 @@ export function useNodes() {
 
       const mempool = await asyncMap(
         firstNode.getMemPool(),
-          async ({ signedTransaction }) => {
-            const [ { receiver, amount, fee }, sender ] = await verifySignatureAndUnpack(signedTransaction);
+          async (signedTransaction) => {
+            const { sender, receiver, amount, fee } = await verifySignatureAndUnpack(signedTransaction);
             return { sender: getPublicID(sender), receiver: getPublicID(receiver), amount, fee }
         }
       )
