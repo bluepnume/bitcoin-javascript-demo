@@ -15,6 +15,7 @@ export type BlockType = {|
     id : string,
     index : number,
     time : number,
+    elapsed : number,
     transactions : Array<TransactionType>,
     difficulty : number,
     reward : number
@@ -34,6 +35,7 @@ export const GENESIS_BLOCK : BlockType = {
     miner:        'SATOSHI',
     index:        1,
     time:         now(),
+    elapsed:      0,
     transactions: [],
     difficulty:   1,
     reward:       INITIAL_REWARD

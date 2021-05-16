@@ -20,25 +20,12 @@ export function BlockChain() : BlockChainType {
         return root;
     }
 
-    const addBlock = async (hashedBlock : string) => {
-        const verifiedBlock = await verifyHashAndUnpack(hashedBlock);
-        const verifiedTransactions = await asyncMap(verifiedBlock.transactions, verifySignatureAndUnpack);
-
-        const fullyVerifiedBlock = {
-            ...verifiedBlock,
-            transactions: verifiedTransactions
-        };
-
-        root.findValueByID(fullyVerifiedBlock.parentid)?.addChildNodeValue(fullyVerifiedBlock);
-    };
-
     const createBlock = async (publicKey : string, transactions : Array<string>) : Promise<?string> => {
         const headBlock = root.getLongestBranchNode().getValue();
-        const headBlockParent = root.getLongestBranchNode().getParent().getValue();
 
         const newTransactions = await asyncFilter(transactions, verifyPackedSignature);
 
-        const newDifficulty = (headBlock.time - headBlockParent.time) > BLOCK_TIME
+        const newDifficulty = (headBlock.elapsed) > BLOCK_TIME
             ? headBlock.difficulty - 1
             : headBlock.difficulty + 1;
 
@@ -52,15 +39,34 @@ export function BlockChain() : BlockChainType {
             index:        headBlock.index + 1,
             id:           uniqueID(),
             time:         now(),
+            elapsed:      now() - headBlock.time,
             transactions: newTransactions,
             difficulty:   newDifficulty,
             reward:       newReward
         };
 
         const hashedBlock = await hashAndPack(newBlock);
+        const hash = unpackHash(hashedBlock);
 
-        if (divisibleBy(unpackHash(hashedBlock), headBlock.difficulty)) {
+        if (divisibleBy(hash, headBlock.difficulty)) {
             return hashedBlock;
+        }
+    };
+
+    const addBlock = async (hashedBlock : string) => {
+        const verifiedBlock = await verifyHashAndUnpack(hashedBlock);
+        const verifiedTransactions = await asyncMap(verifiedBlock.transactions, verifySignatureAndUnpack);
+
+        const fullyVerifiedBlock = {
+            ...verifiedBlock,
+            transactions: verifiedTransactions
+        };
+
+        const headNode = root.findValueByID(fullyVerifiedBlock.parentid);
+        const hash = unpackHash(hashedBlock);
+
+        if (headNode && divisibleBy(hash, headNode.getValue().difficulty)) {
+            headNode.addChildNodeValue(fullyVerifiedBlock);
         }
     };
 
