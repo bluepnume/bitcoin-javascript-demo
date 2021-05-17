@@ -1,15 +1,15 @@
 /* @flow */
 
-import { hashAndPack, unpackHash, verifyHashAndUnpack, verifyPackedSignature, verifySignatureAndUnpack } from '../lib/crypto';
+import { hashAndPack, unpackHash, verifyHashAndUnpack, verifySignatureAndUnpack } from '../lib/crypto';
 import { TreeNode, type TreeNodeType } from '../lib/tree';
-import { asyncFilter, asyncMap, Counter, divisibleBy, now, uniqueID } from '../lib/util';
+import { asyncMap, Counter, divisibleBy, now, uniqueID } from '../lib/util';
 
 import { BLOCK_TIME, GENESIS_BLOCK, REWARD_HALVING_SCHEDULE, type BlockType } from './constants';
 
 export type BlockChainType = {|
     getBlocks : () => TreeNodeType<BlockType>,
     addBlock : (hashedBlock : string) => Promise<void>,
-    createBlock : (publicKey : string, transactions : Array<string>) => Promise<?string>,
+    createBlock : (miner : string, signedTransactions : Array<string>) => Promise<?string>,
     getBalances : () => Promise<Counter>
 |};
 
@@ -20,53 +20,39 @@ export function BlockChain() : BlockChainType {
         return root;
     }
 
-    const createBlock = async (publicKey : string, transactions : Array<string>) : Promise<?string> => {
-        const headBlock = root.getLongestBranchNode().getValue();
+    const createBlock = async (miner : string, signedTransactions : Array<string>) : Promise<?string> => {
+        const { id, index, time, elapsed, reward, difficulty } = root.getLongestBranchValue();
 
-        const newTransactions = await asyncFilter(transactions, verifyPackedSignature);
-
-        const newDifficulty = (headBlock.elapsed) > BLOCK_TIME
-            ? headBlock.difficulty - 1
-            : headBlock.difficulty + 1;
-
-        const newReward = divisibleBy(headBlock.index, REWARD_HALVING_SCHEDULE)
-            ? Math.floor(headBlock.reward / 2)
-            : headBlock.reward;
-
-        const newBlock = {
-            miner:        publicKey,
-            parentid:     headBlock.id,
-            index:        headBlock.index + 1,
+        const blockCandidate = {
+            miner,
+            parentid:     id,
+            index:        index + 1,
             id:           uniqueID(),
             time:         now(),
-            elapsed:      now() - headBlock.time,
-            transactions: newTransactions,
-            difficulty:   newDifficulty,
-            reward:       newReward
+            elapsed:      now() - time,
+            transactions: signedTransactions,
+            difficulty:   difficulty + (elapsed > BLOCK_TIME ? -1 : +1),
+            reward:       divisibleBy(index, REWARD_HALVING_SCHEDULE) ? reward / 2 : reward
         };
 
-        const hashedBlock = await hashAndPack(newBlock);
+        const hashedBlock = await hashAndPack(blockCandidate);
         const hash = unpackHash(hashedBlock);
 
-        if (divisibleBy(hash, headBlock.difficulty)) {
+        if (divisibleBy(hash, blockCandidate.difficulty)) {
             return hashedBlock;
         }
     };
 
     const addBlock = async (hashedBlock : string) => {
-        const verifiedBlock = await verifyHashAndUnpack(hashedBlock);
-        const verifiedTransactions = await asyncMap(verifiedBlock.transactions, verifySignatureAndUnpack);
-
-        const fullyVerifiedBlock = {
-            ...verifiedBlock,
-            transactions: verifiedTransactions
-        };
-
-        const headNode = root.findValueByID(fullyVerifiedBlock.parentid);
+        const block = await verifyHashAndUnpack(hashedBlock);
+        const transactions = await asyncMap(block.transactions, verifySignatureAndUnpack);
+        
+        const blockCandidate = { ...block, transactions };
         const hash = unpackHash(hashedBlock);
 
-        if (headNode && divisibleBy(hash, headNode.getValue().difficulty)) {
-            headNode.addChildNodeValue(fullyVerifiedBlock);
+        if (divisibleBy(hash, blockCandidate.difficulty)) {
+            root.findByValueID(blockCandidate.parentid)
+                ?.addChildNodeByValue(blockCandidate);
         }
     };
 

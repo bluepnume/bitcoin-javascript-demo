@@ -3,7 +3,7 @@
 export type TreeNodeType<T> = {|
     getValue : () => T,
     addChildNode : (TreeNodeType<T>) => void,
-    addChildNodeValue : (T) => void,
+    addChildNodeByValue : (T) => void,
     getParent : () => TreeNodeType<T>,
     setParent : (TreeNodeType<T>) => void,
     getRoot : () => TreeNodeType<T>,
@@ -11,8 +11,8 @@ export type TreeNodeType<T> = {|
     getLongestBranchNode : () => TreeNodeType<T>,
     getLongestBranchValue : () => T,
     find : ((TreeNodeType<T>) => boolean) => ?TreeNodeType<T>,
-    findValue : ((T) => boolean) => ?TreeNodeType<T>,
-    findValueByID : (string) => ?TreeNodeType<T>,
+    findByValue : ((T) => boolean) => ?TreeNodeType<T>,
+    findByValueID : (string) => ?TreeNodeType<T>,
     getChain : () => Array<TreeNodeType<T>>,
     getLongestChain : () => Array<TreeNodeType<T>>,
     getLongestChainAsValues : () => Array<T>
@@ -32,7 +32,7 @@ export function TreeNode<T>(value : T) : TreeNodeType<T> {
         childNode.setParent(node)
     };
 
-    const addChildNodeValue = (val) => {
+    const addChildNodeByValue = (val) => {
         addChildNode(TreeNode(val))
     };
 
@@ -100,13 +100,13 @@ export function TreeNode<T>(value : T) : TreeNodeType<T> {
         }
     };
 
-    const findValue = (predicate) => {
+    const findByValue = (predicate) => {
         return find(node => predicate(node.getValue()));
     };
 
-    const findValueByID = (id) => {
+    const findByValueID = (id) => {
         // $FlowFixMe
-        return findValue(value => value.id === id);
+        return findByValue(value => value.id === id);
     };
 
     const getChain = () => {
@@ -135,7 +135,7 @@ export function TreeNode<T>(value : T) : TreeNodeType<T> {
 
     node.getValue = getValue;
     node.addChildNode = addChildNode;
-    node.addChildNodeValue = addChildNodeValue;
+    node.addChildNodeByValue = addChildNodeByValue;
     node.getParent = getParent;
     node.setParent = setParent;
     node.getRoot = getRoot;
@@ -143,8 +143,8 @@ export function TreeNode<T>(value : T) : TreeNodeType<T> {
     node.getLongestBranchNode = getLongestBranchNode;
     node.getLongestBranchValue = getLongestBranchValue;
     node.find = find;
-    node.findValue = findValue;
-    node.findValueByID = findValueByID;
+    node.findByValue = findByValue;
+    node.findByValueID = findByValueID;
     node.getChain = getChain;
     node.getLongestChain = getLongestChain;
     node.getLongestChainAsValues = getLongestChainAsValues;

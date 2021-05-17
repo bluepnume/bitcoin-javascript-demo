@@ -1,6 +1,6 @@
 /* @flow */
 
-import { KeyPair, signAndPack } from '../lib/crypto';
+import { KeyPair, signAndPack, verifySignatureAndUnpack } from '../lib/crypto';
 import { loop } from '../lib/util';
 import { Network } from '../lib/network';
 
@@ -37,13 +37,17 @@ export function BitcoinNode() : BitcoinNodeType {
     };
 
     network.listen('ADD_TRANSACTION', async (signedTransaction) => {
-        mempool.push(signedTransaction);     
+        const { sender, receiver, amount, fee } = await verifySignatureAndUnpack(signedTransaction);
+
+        if (sender && receiver && amount && fee) {
+            mempool.push(signedTransaction);
+        } 
     });
 
     const mine = async () : Promise<void> => {
         await loop(async () => {
-            const transactions = mempool.slice(0, BLOCK_SIZE_LIMIT);
-            const hashedBlock = await blockchain.createBlock(await keypair.publicKey, transactions);
+            const signedTransactions = mempool.slice(0, BLOCK_SIZE_LIMIT);
+            const hashedBlock = await blockchain.createBlock(await keypair.publicKey, signedTransactions);
 
             if (hashedBlock) {
                 await network.broadcast('ADD_BLOCK', hashedBlock);
