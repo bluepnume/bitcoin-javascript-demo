@@ -16,27 +16,28 @@ type BitcoinNodeType = {|
 |};
 
 export function BitcoinNode() : BitcoinNodeType {
-    const keypair = KeyPair();
-    const network = Network();
-    const blockchain = BlockChain();
-    let mempool = [];
+    const { publicKey, privateKey } = KeyPair();
+    const { listen, broadcast } = Network();
+    const { getBlocks, createBlock, addBlock, getBalances } = BlockChain();
+
+    const mempool = [];
 
     const getPublicKey = async () : Promise<string> => {
-        return await keypair.publicKey;
+        return await publicKey;
     }
 
     const send = async (receiver : string, amount : number, fee : number) : Promise<void> => {
         const signedTransaction = await signAndPack({
-            sender: await keypair.publicKey,
+            sender: await publicKey,
             receiver,
             amount,
             fee
-        }, await keypair.publicKey, await keypair.privateKey)
+        }, await publicKey, await privateKey)
 
-        await network.broadcast('ADD_TRANSACTION', signedTransaction);
+        await broadcast('ADD_TRANSACTION', signedTransaction);
     };
 
-    network.listen('ADD_TRANSACTION', async (signedTransaction) => {
+    listen('ADD_TRANSACTION', async (signedTransaction) => {
         const { sender, receiver, amount, fee } = await verifySignatureAndUnpack(signedTransaction);
 
         if (sender && receiver && amount && fee) {
@@ -47,21 +48,21 @@ export function BitcoinNode() : BitcoinNodeType {
     const mine = async () : Promise<void> => {
         await loop(async () => {
             const signedTransactions = mempool.slice(0, BLOCK_SIZE_LIMIT);
-            const hashedBlock = await blockchain.createBlock(await keypair.publicKey, signedTransactions);
+            const hashedBlock = await createBlock(await publicKey, signedTransactions);
 
             if (hashedBlock) {
-                await network.broadcast('ADD_BLOCK', hashedBlock);
+                await broadcast('ADD_BLOCK', hashedBlock);
             }
         });
     };
     
-    network.listen('ADD_BLOCK', async (hashedBlock) => {
-        mempool = [];
-        await blockchain.addBlock(hashedBlock);
+    listen('ADD_BLOCK', async (hashedBlock) => {
+        mempool.length = 0;
+        await addBlock(hashedBlock);
     });
 
     const getBlockChain = () => {
-        return blockchain;
+        return { getBlocks, createBlock, addBlock, getBalances };
     };
 
     const getMemPool = () => {

@@ -32,7 +32,7 @@ export function BlockChain() : BlockChainType {
             elapsed:      now() - time,
             transactions: signedTransactions,
             difficulty:   difficulty + (elapsed > BLOCK_TIME ? -1 : +1),
-            reward:       divisibleBy(index, REWARD_HALVING_SCHEDULE) ? reward / 2 : reward
+            reward:       divisibleBy(index, REWARD_HALVING_SCHEDULE) ? reward/2 : reward
         };
 
         const hashedBlock = await hashAndPack(blockCandidate);
@@ -50,22 +50,27 @@ export function BlockChain() : BlockChainType {
         const blockCandidate = { ...block, transactions };
         const hash = unpackHash(hashedBlock);
 
-        if (divisibleBy(hash, blockCandidate.difficulty)) {
-            root.findByValueID(blockCandidate.parentid)
-                ?.addChildNodeByValue(blockCandidate);
+        if (!divisibleBy(hash, blockCandidate.difficulty)) {
+            return;
         }
+
+        // Do a bunch more validation
+
+        root.findByValueID(blockCandidate.parentid)
+            ?.addChildNodeByValue(blockCandidate);
     };
 
     const getBalances = async () : Promise<Counter> => {
         const balances = new Counter();
 
-        for (let { miner, reward, transactions } of root.getLongestChainAsValues()) {
+        for (const { miner, reward, transactions } of root.getLongestChainAsValues()) {
             balances.add(miner, reward);
 
-            for (let { receiver, amount, fee, sender } of transactions) {
-                balances.add(miner, fee);
+            for (const { receiver, amount, fee, sender } of transactions) {
                 balances.add(receiver, amount);
                 balances.subtract(sender, amount);
+                
+                balances.add(miner, fee);
                 balances.subtract(sender, fee);
             }
         }
