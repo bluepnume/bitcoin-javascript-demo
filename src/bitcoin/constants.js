@@ -11,7 +11,7 @@ export type TransactionType = {|
 
 export type BlockType = {|
     miner : string,
-    parentid : string,
+    parentid : ?string,
     id : string,
     index : number,
     time : number,
@@ -23,22 +23,20 @@ export type BlockType = {|
 
 export const BLOCK_TIME = 1000;
 
-export const INITIAL_REWARD = 1024;
-
 export const REWARD_HALVING_SCHEDULE = 20;
 
 export const BLOCK_SIZE_LIMIT = 10;
 
 export const GENESIS_BLOCK : BlockType = {
+    parentid:     null,
     id:           'GENESIS',
-    parentid:     'GENESIS',
     miner:        'SATOSHI',
     index:        1,
     time:         now(),
     elapsed:      0,
     transactions: [],
     difficulty:   1,
-    reward:       INITIAL_REWARD
+    reward:       1024
 };
 
 export const PRICE_FORMULA = (days : number) : number =>
