@@ -41,3 +41,6 @@ export const GENESIS_BLOCK : BlockType = {
     reward:       INITIAL_REWARD
 };
 
+export const PRICE_FORMULA = (days : number) : number =>
+    10 ** (2.9065 * Math.log(days) - 19.493);
+
